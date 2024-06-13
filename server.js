@@ -9,7 +9,9 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-
+// Users
+app.use('/users', require('./src/routes/register'))
+app.use('/users', require('./src/routes/login'))
 
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI)
