@@ -4,7 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const User = require('../../models/userModel')
+const User = require('../../models/Auth/userModel')
 dotenv.config();
 
 router.post("/login", async (req, res) => {
@@ -13,6 +13,7 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({
       name : requestUser.name,
       email: requestUser.email,
+      role: requestUser.role
     });
 
     if (!user) {
@@ -28,6 +29,7 @@ router.post("/login", async (req, res) => {
     const jwtUser = {
       id: user.id,
       email: user.email,
+      role: user.role,
     };
     const token = jwt.sign(jwtUser, process.env.JWT_SECRET_KEY, {
       expiresIn: "24h",

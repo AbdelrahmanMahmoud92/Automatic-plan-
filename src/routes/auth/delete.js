@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const ensureAuth = require('../../middlewares/auth')
-const User = require('../../models/userModel')
+const User = require('../../models/Auth/userModel')
 
 
-router.delete('/delete', ensureAuth(), async(req, res) => {
+router.delete('/delete', ensureAuth(['admin', 'guest', 'restaurant_organization', 'flight_organization', 'hotel_organization']), async(req, res) => {
     try{
         const findUser = await User.findById(req.user.id);
         if(findUser){

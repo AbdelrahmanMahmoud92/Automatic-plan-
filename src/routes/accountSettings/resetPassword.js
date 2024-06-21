@@ -3,9 +3,9 @@ const Joi = require('joi');
 const router = express.Router();
 const ensureAuth = require("../../middlewares/auth");
 const bcrypt = require('bcrypt');
-const User = require('../models/userModel')
+const User = require('../../models/Auth/userModel')
 
-router.put('/resetpassword/', ensureAuth(), async(req, res)=>{
+router.put('/resetpassword/', ensureAuth(['admin', 'guest', 'restaurant_organization', 'flight_organization', 'hotel_organization']), async(req, res)=>{
     try{
         const user = await User.findById(req.user.id)
         if(user){

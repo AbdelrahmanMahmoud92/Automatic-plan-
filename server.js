@@ -10,8 +10,42 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Users
-app.use('/users', require('./src/routes/register'))
-app.use('/users', require('./src/routes/login'))
+app.use('/users', require('./src/routes/auth/register'))
+app.use('/users', require('./src/routes/auth/login'))
+app.use('/users', require('./src/routes/auth/update'))
+app.use('/users', require('./src/routes/auth/get'))
+app.use('/users', require('./src/routes/auth/delete'))
+
+
+// Organization requets
+app.use('/organization', require('./src/routes/organizationRequest/requests'))
+app.use('/organization', require('./src/routes/organizationRequest/response'))
+
+
+// Coutries
+app.use('/countries', require('./src/routes/countries/add'))
+app.use('/countries', require('./src/routes/countries/delete'))
+
+
+// Hotels
+app.use('/hotels', require('./src/routes/hotels/add'))
+app.use('/hotels', require('./src/routes/hotels/delete'))
+app.use('/hotels', require('./src/routes/hotels/update'))
+
+// Rooms
+app.use('/rooms', require('./src/routes/rooms/add'))
+
+
+// Restaurants
+app.use('/restaurants', require('./src/routes/restaurants/add'))
+app.use('/restaurants', require('./src/routes/restaurants/update'))
+app.use('/restaurants', require('./src/routes/restaurants/delete'))
+
+
+// Flights and planes
+app.use('/planes', require('./src/routes/flights/addPlane'))
+app.use('/flight', require('./src/routes/flights/addFlight'))
+
 
 const PORT = process.env.PORT || 5000;
 mongoose.connect(process.env.MONGODB_URI)
