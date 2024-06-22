@@ -55,12 +55,13 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
 
         const cashCompanyAccount = await Cash.findOne({userID: realtedCompany.managerID})
         const cashUserAccount = await Cash.findOne({userID: guestAccount._id});
+        if(!cashUserAccount) return res.status(401).send('Must have cash account.')
 
         const validReservation = await Reservation.findOne({userID: guestAccount._id, flightID: validFlight._id});
         if(validReservation) return res.status(200).send('You are already reservation this flight.')
 
 
-        const relatedPlane = await Plane.findOne({_id: validFlight.planeID}).select('ticketPrice');
+        const relatedPlane = await Plane.findOne({_id: validFlight.planeID}).select('ticketPrice passengerCapacity');
         if(reservation_JOI.ticketLevel === 'Economy'){
             if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.Economy){
                 const newReservation = new Reservation({
@@ -69,11 +70,13 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
                     userID: guestAccount.id,
                     userName: guestAccount.name,
                 });
-                newReservation.save();
+                await newReservation.save();
                 cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.Economy;
                 cashUserAccount.currentBalance -= relatedPlane.ticketPrice.Economy;
                 await cashCompanyAccount.save();
                 await cashUserAccount.save();
+                relatedPlane.passengerCapacity -= 1;
+                await relatedPlane.save();
                 return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
                 Reservation: newReservation,
                 TransferCash: 'Cash money sent successfully to the company.'
@@ -81,7 +84,7 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
             }else{
                 return res.send(`Your money is: ${cashUserAccount.currentBalance}, flight cash is: ${relatedPlane.ticketPrice.Business}`);
             }
-            }else if(reservation_JOI.ticketLevel === 'Business'){
+        } else if(reservation_JOI.ticketLevel === 'Business'){
             if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.Business){
                 const newReservation = new Reservation({
                     flightID: validFlight._id,
@@ -89,11 +92,13 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
                     userID: guestAccount.id,
                     userName: guestAccount.name,
                 });
-                newReservation.save();
+                await newReservation.save();
                 cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.Business;
                 cashUserAccount.currentBalance -= relatedPlane.ticketPrice.Business;
                 await cashCompanyAccount.save();
                 await cashUserAccount.save();
+                relatedPlane.passengerCapacity -= 1;
+                await relatedPlane.save();
                 return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
                     Reservation: newReservation,
                     TransferCash: 'Cash money sent successfully to the company.'
@@ -101,7 +106,7 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
             }else{
                 return res.send(`Your money is: ${cashUserAccount.currentBalance}, flight cash is: ${relatedPlane.ticketPrice.Business}`);
             }
-        }else if(reservation_JOI.ticketLevel === 'FirstClass'){
+        } else if(reservation_JOI.ticketLevel === 'FirstClass'){
             if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.FirstClass){
                 const newReservation = new Reservation({
                     flightID: validFlight._id,
@@ -109,11 +114,13 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
                     userID: guestAccount.id,
                     userName: guestAccount.name,
                 });
-                newReservation.save();
+                await newReservation.save();
                 cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.FirstClass;
                 cashUserAccount.currentBalance -= relatedPlane.ticketPrice.FirstClass;
                 await cashCompanyAccount.save();
                 await cashUserAccount.save();
+                relatedPlane.passengerCapacity -= 1;
+                await relatedPlane.save();
                 return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
                     Reservation: newReservation,
                     TransferCash: 'Cash money sent successfully to the company.'
