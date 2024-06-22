@@ -6,23 +6,42 @@ const userSchema = new mongoose.Schema({
         type:    String,
         default: uuidv4,
     },
-    name:        String,
+
+    name:{
+        type:    String, 
+        required: true
+    },
+
     email: {
         type:    String, 
         unique:  true,
     },
-    password:    String,
 
-    role:{
-        type:    String,
-        enum:    ['admin' ,'guest', 'restaurant_organization', 'flight_organization', 'hotel_organization'],
-        default: 'user'
+    password:{
+        type:    String, 
+        required: true
     },
 
+    // country:{
+    //     type:    String, 
+        // required: true
+    // },
+    
+    role:{
+        type:    String,
+        enum:    ['admin' ,'guest', 'restaurant_organization', 'fligth_Company', 'hotel_organization'],
+        default: 'user'
+    },
+    
     status: {
         type: String,
         enum: ['pending', 'rejected', 'accepted'],
         default: 'accepted'
+    },
+    
+    cashAccount: {
+        type:    String, 
+        ref:     'Cash',    
     }
 
 

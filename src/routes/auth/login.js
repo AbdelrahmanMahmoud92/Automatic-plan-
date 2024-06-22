@@ -13,12 +13,16 @@ router.post("/login", async (req, res) => {
     const user = await User.findOne({
       name : requestUser.name,
       email: requestUser.email,
-      role: requestUser.role
+      role: requestUser.role,
+      country: requestUser.country,
     });
 
-    if (!user) {
+    if(!user) {
       return res.status(400).send("invalid Credentials");
     }
+    if(user.status === 'pending'){
+      return res.status(400).send('Invalid account.')
+    };
     const isValidPassword = await bcrypt.compare(
       req.body.password,
       user.password

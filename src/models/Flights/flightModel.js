@@ -9,6 +9,16 @@ const flightSchema = mongoose.Schema({
         default:    uuidv4,
     },
 
+    companyName:{
+        type:        String,
+        ref:         'Company',
+    },
+
+    companyID:{
+        type:        String,
+        ref:         'Company',
+    },
+
     flightNumber: {
         type:       Number,
         // required:   true,
@@ -40,9 +50,9 @@ const flightSchema = mongoose.Schema({
 }, { timestamps: true });
 
 flightSchema.virtual('passengers', { // Parameter to get related objects.
-    ref: 'Passenger',
+    ref: 'Reservation',
     localField: '_id',
-    foreignField: 'flightNumber' // In passenger model.
+    foreignField: 'flightNumber' // In Reservation model.
 });
 
 flightSchema.set('toObject', {virtuals: true});

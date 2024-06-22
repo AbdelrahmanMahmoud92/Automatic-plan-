@@ -5,7 +5,7 @@ const ensureAuth = require("../../middlewares/auth");
 const bcrypt = require('bcrypt');
 const User = require('../../models/Auth/userModel')
 
-router.put('/resetpassword/', ensureAuth(['admin', 'guest', 'restaurant_organization', 'flight_organization', 'hotel_organization']), async(req, res)=>{
+router.put('/resetpassword/', ensureAuth(['admin', 'guest', 'restaurant_organization', 'fligth_Company', 'hotel_organization']), async(req, res)=>{
     try{
         const user = await User.findById(req.user.id)
         if(user){

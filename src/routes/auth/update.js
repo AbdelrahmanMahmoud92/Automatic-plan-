@@ -4,7 +4,7 @@ const router = express.Router();
 const ensureAuth = require('../../middlewares/auth')
 const User = require('../../models/Auth/userModel')
 
-router.put('/update', ensureAuth(['admin', 'guest', 'restaurant_organization', 'flight_organization', 'hotel_organization']), async (req, res) => {
+router.put('/update', ensureAuth(['admin', 'guest', 'restaurant_organization', 'fligth_Company', 'hotel_organization']), async (req, res) => {
     try {
         const findUser = await User.findById(req.user.id);
         const validRole = req.validRole();

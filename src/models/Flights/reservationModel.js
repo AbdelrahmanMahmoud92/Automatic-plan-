@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
 
-const passengerSchema = mongoose.Schema({
+const reservationSchema = mongoose.Schema({
     _id: {
         type: String,
         default: uuidv4,
@@ -17,17 +17,17 @@ const passengerSchema = mongoose.Schema({
         ref:     'Flight',
     },
 
-    passengerID: {
+    userID: {
         type:    String,
         ref:     'User',
     },
     
-    passengerName: {
+    userName: {
         type:    String,
         ref:     'User',
     }
 });
 
-const Passenger = mongoose.model('Passenger', passengerSchema);
+const Reservation = mongoose.model('Reservation', reservationSchema);
 
-module.exports = Passenger;
+module.exports = Reservation;

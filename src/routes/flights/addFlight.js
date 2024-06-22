@@ -6,10 +6,11 @@ const moment = require('moment')
 const User = require('../../models/Auth/userModel');
 const Plane = require('../../models/Flights/planeModel');
 const Flight = require('../../models/Flights/flightModel');
+const Company = require('../../models/Flights/companyModel');
 const City = require('../../models/Countries and cities/cityModel');
 
 
-router.post('/:planeID/add', ensureAuth('flight_organization'), async(req,res)=>{
+router.post('/:companyID/:planeID/add', ensureAuth('fligth_Company'), async(req,res)=>{
     try {
         const organizationAccount = await User.findById(req.user.id);
         const validRole = req.validRole();
@@ -17,6 +18,11 @@ router.post('/:planeID/add', ensureAuth('flight_organization'), async(req,res)=>
         const plane = await Plane.findById(req.params.planeID);
         if(!plane) return res.status(403).send('No plane with given ID');
         if(plane.isAvailable !== true) return res.status(400).send('This plane is on the move')
+        
+            
+        const validCompany = await Company.findById(req.params.companyID)
+        if(!validCompany) return res.status(403).send('No company with this ID.');
+
         const cityFrom = await City.findOne({ cityName: flight_JOI.cityFrom });
         const cityTo = await City.findOne({ cityName: flight_JOI.cityTo });
         if(!cityFrom || !cityTo) {
@@ -28,6 +34,8 @@ router.post('/:planeID/add', ensureAuth('flight_organization'), async(req,res)=>
             cityTo: flight_JOI.cityTo,
             departureTime: flight_JOI.departureTime,
             arrivalTime: flight_JOI.arrivalTime,
+            companyName: validCompany.companyName,
+            companyID: validCompany._id,
             planeID: plane._id
         });
         
