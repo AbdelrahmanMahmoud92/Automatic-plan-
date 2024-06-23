@@ -64,7 +64,6 @@ async function validateFlight(flight) {
         cityTo: Joi.string().required(),
         departureTime: Joi.date().required(),
         arrivalTime: Joi.date().greater(Joi.ref('departureTime')).required(),
-        // planeID: Joi.d
     });
 
     try {

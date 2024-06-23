@@ -40,99 +40,67 @@ async(req,res) =>{
         console.log(err);
         return res.send(err);
     }
-})
-router.post('/:flightID/reservation/', ensureAuth('guest'), async(req, res) =>{
+});
+
+router.post('/:flightID/reservation/', ensureAuth('guest'), async (req, res) => {
     try {
         const guestAccount = await User.findById(req.user.id);
-        const validRole = req.validRole();
-
         const validFlight = await Flight.findById(req.params.flightID);
-        if(!validFlight) return res.status(404).send('No flight with given ID.')
+        
+        if(!validFlight) {
+            return res.status(404).send('No flight with given ID.');
+        }
 
-        const realtedCompany = await Company.findOne({_id: validFlight.companyID})
+        const relatedCompany = await Company.findOne({ _id: validFlight.companyID });
+        const cashCompanyAccount = await Cash.findOne({ userID: relatedCompany.managerID });
+        const cashUserAccount = await Cash.findOne({ userID: guestAccount._id });
+
+        if(!cashUserAccount) {
+            return res.status(401).send('Must have cash account.');
+        }
+
+        const existingReservation = await Reservation.findOne({ userID: guestAccount._id, flightID: validFlight._id });
+        if(existingReservation) {
+            return res.status(200).send('You already have a reservation for this flight.');
+        }
 
         const reservation_JOI = await validateReservation(req.body);
 
-        const cashCompanyAccount = await Cash.findOne({userID: realtedCompany.managerID})
-        const cashUserAccount = await Cash.findOne({userID: guestAccount._id});
-        if(!cashUserAccount) return res.status(401).send('Must have cash account.')
+        const relatedPlane = await Plane.findOne({ _id: validFlight.planeID }).select('ticketPrice passengerCapacity');
+        const ticketPrice = relatedPlane.ticketPrice[reservation_JOI.ticketLevel];
 
-        const validReservation = await Reservation.findOne({userID: guestAccount._id, flightID: validFlight._id});
-        if(validReservation) return res.status(200).send('You are already reservation this flight.')
-
-
-        const relatedPlane = await Plane.findOne({_id: validFlight.planeID}).select('ticketPrice passengerCapacity');
-        if(reservation_JOI.ticketLevel === 'Economy'){
-            if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.Economy){
-                const newReservation = new Reservation({
-                    flightID: validFlight._id,
-                    flightNumber: validFlight.flightNumber,
-                    userID: guestAccount.id,
-                    userName: guestAccount.name,
-                });
-                await newReservation.save();
-                cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.Economy;
-                cashUserAccount.currentBalance -= relatedPlane.ticketPrice.Economy;
-                await cashCompanyAccount.save();
-                await cashUserAccount.save();
-                relatedPlane.passengerCapacity -= 1;
-                await relatedPlane.save();
-                return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
-                Reservation: newReservation,
-                TransferCash: 'Cash money sent successfully to the company.'
-                });
-            }else{
-                return res.send(`Your money is: ${cashUserAccount.currentBalance}, flight cash is: ${relatedPlane.ticketPrice.Business}`);
-            }
-        } else if(reservation_JOI.ticketLevel === 'Business'){
-            if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.Business){
-                const newReservation = new Reservation({
-                    flightID: validFlight._id,
-                    flightNumber: validFlight.flightNumber,
-                    userID: guestAccount.id,
-                    userName: guestAccount.name,
-                });
-                await newReservation.save();
-                cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.Business;
-                cashUserAccount.currentBalance -= relatedPlane.ticketPrice.Business;
-                await cashCompanyAccount.save();
-                await cashUserAccount.save();
-                relatedPlane.passengerCapacity -= 1;
-                await relatedPlane.save();
-                return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
-                    Reservation: newReservation,
-                    TransferCash: 'Cash money sent successfully to the company.'
-                    });
-            }else{
-                return res.send(`Your money is: ${cashUserAccount.currentBalance}, flight cash is: ${relatedPlane.ticketPrice.Business}`);
-            }
-        } else if(reservation_JOI.ticketLevel === 'FirstClass'){
-            if(cashUserAccount.currentBalance >= relatedPlane.ticketPrice.FirstClass){
-                const newReservation = new Reservation({
-                    flightID: validFlight._id,
-                    flightNumber: validFlight.flightNumber,
-                    userID: guestAccount.id,
-                    userName: guestAccount.name,
-                });
-                await newReservation.save();
-                cashCompanyAccount.currentBalance += relatedPlane.ticketPrice.FirstClass;
-                cashUserAccount.currentBalance -= relatedPlane.ticketPrice.FirstClass;
-                await cashCompanyAccount.save();
-                await cashUserAccount.save();
-                relatedPlane.passengerCapacity -= 1;
-                await relatedPlane.save();
-                return res.status(200).json({Message: `Reservastion successfully to ${validFlight.cityTo}`,
-                    Reservation: newReservation,
-                    TransferCash: 'Cash money sent successfully to the company.'
-                });
-            }else{
-                return res.send(`Your money is: ${cashUserAccount.currentBalance}, flight cash is: ${relatedPlane.ticketPrice.Business}`);
-            }
+        if (cashUserAccount.currentBalance < ticketPrice) {
+            return res.send(`Your balance (${cashUserAccount.currentBalance}) is insufficient for this reservation.`);
         }
+
+        const newReservation = new Reservation({
+            flightID: validFlight._id,
+            flightNumber: validFlight.flightNumber,
+            userID: guestAccount.id,
+            userName: guestAccount.name,
+        });
+
         
-    }catch(err){
-        console.log(err);
-        return res.send(err);
+        cashCompanyAccount.currentBalance += ticketPrice;
+        cashUserAccount.currentBalance -= ticketPrice;
+        relatedPlane.passengerCapacity -= 1;
+        
+        await Promise.all([
+            newReservation.save(),
+            cashCompanyAccount.save(),
+            cashUserAccount.save(),
+            relatedPlane.save()
+        ]);
+
+        return res.status(200).json({
+            Message: `Reservation successful for flight to ${validFlight.cityTo}`,
+            Reservation: newReservation,
+            TransferCash: 'Cash transferred successfully to the company.'
+        });
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send('Internal Server Error');
     }
 });
 
