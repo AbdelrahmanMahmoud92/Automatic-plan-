@@ -67,6 +67,7 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async (req, res) => 
         const reservation_JOI = await validateReservation(req.body);
 
         const relatedPlane = await Plane.findOne({ _id: validFlight.planeID }).select('ticketPrice passengerCapacity');
+        if(relatedPlane.passengerCapacity === 0) return res.status(401).send('No tickets available.');
         const ticketPrice = relatedPlane.ticketPrice[reservation_JOI.ticketLevel];
 
         if (cashUserAccount.currentBalance < ticketPrice) {
