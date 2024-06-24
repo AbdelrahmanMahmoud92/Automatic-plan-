@@ -4,6 +4,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const User = require('../../models/Auth/userModel')
 const Cash = require('../../models/CashAccount/cashModel')
+const City = require('../../models/Countries and cities/cityModel')
 
 
 router.post("/register", async (req, res) => {
@@ -29,7 +30,7 @@ router.post("/register", async (req, res) => {
             name: validatedUser.name,
             email: validatedUser.email,
             role: validatedUser.role,
-            // country: validatedUser.country,
+            // cityName: validatedUser.cityName,
             password: hashedPassword,
             status: 'pending'
           });
@@ -56,9 +57,13 @@ router.post("/register", async (req, res) => {
         name: validatedUser.name,
         email: validatedUser.email,
         role: validatedUser.role,
-        // country: validatedUser.country,
+        cityName: validatedUser.cityName,
         password: hashedPassword,
       });
+
+
+      const validCity = await City.findOne({cityName: newUser.cityName});
+      if(!validCity) return res.status(400).send('Pleae write a valid city');
       if(newUser.role !== 'admin' && newUser.role !== 'guest'){
         const newCash = new Cash({
         userID: newUser._id,
@@ -83,7 +88,7 @@ async function validationUser(user) {
     password: Joi.string().required().min(8),
     role: Joi.string().valid('admin', 'guest', 'restaurant_organization', 'fligth_Company', 'hotel_organization')
     .required(),
-    // country: Joi.string().required(),
+    cityName: Joi.string(),
   });
 
   try {

@@ -14,7 +14,6 @@ router.post("/login", async (req, res) => {
       name : requestUser.name,
       email: requestUser.email,
       role: requestUser.role,
-      country: requestUser.country,
     });
 
     if(!user) {

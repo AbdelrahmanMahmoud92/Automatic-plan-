@@ -22,10 +22,10 @@ const userSchema = new mongoose.Schema({
         required: true
     },
 
-    // country:{
-    //     type:    String, 
-        // required: true
-    // },
+    cityName:{
+        type:    String,
+        ref:     "City", 
+    },
     
     role:{
         type:    String,

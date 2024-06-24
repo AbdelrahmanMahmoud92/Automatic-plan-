@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const ensureAuth = require('../../middlewares/auth');
 const Joi = require("joi");
-const Reservation = require('../../models/Flights/reservationModel')
+const Reservation = require('../../models/Flights/reservationModel');
+const Flight = require('../../models/Flights/flightModel');
 const User = require('../../models/Auth/userModel');
 const Hotel = require('../../models/Hotel management/hotelModel');
 const Room = require('../../models/Hotel management/roomModel');
 const Cash = require('../../models/CashAccount/cashModel');
 
-// Show flights
+
 router.get('/all', ensureAuth(['admin' ,'guest', 'restaurant_organization', 'fligth_Company', 'hotel_organization']),
 async(req,res) =>{
     try{
@@ -43,23 +44,36 @@ router.post('/:hotelID/rooms/:roomID/reservation/', ensureAuth('guest'), async (
         const guestAccount = await User.findById(req.user.id);
         const validHotel = await Hotel.findById(req.params.hotelID);
         
-        if(!validHotel) {
-            return res.status(404).send('No hotel with given ID.');
+
+        if(!validHotel) return res.status(404).send('No hotel with given ID.');
+
+        
+        if(validHotel.cityName !== guestAccount.cityName){
+            const existingReservation = await Reservation.findOne({ userID: guestAccount._id, cityFrom: guestAccount.cityName, cityTo: validHotel._id });
+            if(!existingReservation){
+                const relatedFlights = await Flight.find({cityFrom: guestAccount.cityName, cityTo: validHotel.cityName});
+                if(!relatedFlights.length > 0) return res.status(200).send('This hotel out of your circle. No available flights to this city.');
+                return res.status(200).json({
+                    "Messaga"                            :     "This hotel out of your circle.", 
+                    "Available flights to this city"     :     relatedFlights})
+            };
+        
         };
+
+
         const relatedRoom = await Room.findById(req.params.roomID);
         if(!relatedRoom) return res.status(401).send('Invalid room.');
+        if(relatedRoom.isAvailable === false) return res.status(400).send('Room is taken');
 
         const cashHotelAccount = await Cash.findOne({ userID: validHotel.managerID });
         const cashUserAccount = await Cash.findOne({ userID: guestAccount._id });
         
-        if(!cashUserAccount) {
-            return res.status(401).send('Must have cash account.');
-        };
+        if(!cashUserAccount) return res.status(401).send('Must have cash account.');
+        
 
         const existingReservation = await Reservation.findOne({ userID: guestAccount._id, hotelID: validHotel._id });
-        if(existingReservation) {
-            return res.status(200).send('You already have a reservation for this hotel.');
-        };
+        if(existingReservation) return res.status(200).send('You already have a reservation for this hotel.');
+        
 
         const reservation_JOI = await validateReservation(req.body);
 
@@ -78,7 +92,8 @@ router.post('/:hotelID/rooms/:roomID/reservation/', ensureAuth('guest'), async (
         
         cashHotelAccount.currentBalance += relatedRoom.priceInNight * reservation_JOI.nights;
         cashUserAccount.currentBalance -= relatedRoom.priceInNight * reservation_JOI.nights;
-        
+        relatedRoom.isAvailable = false;
+        relatedRoom.save();
         await Promise.all([
             newReservation.save(),
             cashHotelAccount.save(),
