@@ -35,6 +35,7 @@ app.use('/cash/management', require('./src/routes/cash/add'));
 app.use('/hotels', require('./src/routes/hotels/add'));
 app.use('/hotels', require('./src/routes/hotels/delete'));
 app.use('/hotels', require('./src/routes/hotels/update'));
+app.use('/hotels', require('./src/routes/hotels/relatedHotelsCity'));
 
 // Rooms
 app.use('/rooms', require('./src/routes/rooms/add'));
@@ -44,6 +45,7 @@ app.use('/rooms', require('./src/routes/rooms/add'));
 app.use('/restaurants', require('./src/routes/restaurants/add'));
 app.use('/restaurants', require('./src/routes/restaurants/update'));
 app.use('/restaurants', require('./src/routes/restaurants/delete'));
+app.use('/restaurants', require('./src/routes/restaurants/relatedRestaurantCity'));
 
 
 // Flights and planes and company

@@ -55,6 +55,14 @@ router.post('/:flightID/reservation/', ensureAuth('guest'), async (req, res) => 
         const cashCompanyAccount = await Cash.findOne({ userID: relatedCompany.managerID });
         const cashUserAccount = await Cash.findOne({ userID: guestAccount._id });
 
+
+        const conflictedBooking = await Reservation.findOne({userID: guestAccount._id, flightID: { $ne: validFlight._id }});
+        if(conflictedBooking){
+            const dateReservation = await Flight.findById(conflictedBooking.flightID);
+            console.log(dateReservation)
+            if(dateReservation.departureTime.getTime() === validFlight.departureTime.getTime()) return res.status(403).send('You have another reservation in the same time.')
+        };
+        
         if(!cashUserAccount) {
             return res.status(401).send('Must have cash account.');
         }
