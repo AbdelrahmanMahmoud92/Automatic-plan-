@@ -23,7 +23,7 @@ router.post('/city/:cityID/hotel/:hotelID/add', ensureAuth('hotel_organization')
 
         const room_JOI = await validateRoom(req.body);
         console.log("Validated Room Data:", room_JOI); 
-
+        
         const newRoom = new Room({
             hotelId: validHotel.id,
             hotelName: validHotel.hotelName,

@@ -17,6 +17,16 @@ const reservationSchema = mongoose.Schema({
         ref:     'Flight',
     },
 
+    hotelID: {
+        type:    String,
+        ref:     "Hotel",
+    },
+
+    hotelName: {
+        type:    String, 
+        ref:     "Hotel",
+    },
+
     userID: {
         type:    String,
         ref:     'User',

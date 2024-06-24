@@ -36,6 +36,7 @@ app.use('/hotels', require('./src/routes/hotels/add'));
 app.use('/hotels', require('./src/routes/hotels/delete'));
 app.use('/hotels', require('./src/routes/hotels/update'));
 app.use('/hotels', require('./src/routes/hotels/relatedHotelsCity'));
+app.use('/hotels', require('./src/routes/hotels/reservationHotel'));
 
 // Rooms
 app.use('/rooms', require('./src/routes/rooms/add'));
